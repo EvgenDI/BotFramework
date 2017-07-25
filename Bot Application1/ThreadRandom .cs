@@ -21,13 +21,13 @@ namespace Bot_Application1.Dialogs
                 int seed;
                 lock (global)
                 {
-                    seed = global.Next(1000,10000);
+                    seed = global.Next(10000,100000);
                 }
 
                 local = inst = new Random(seed);
             }
 
-            return inst.Next(1000, 10000);
+            return inst.Next(10000, 100000);
         }
 
         public static  Task<int> getRandom()

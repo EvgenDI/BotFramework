@@ -11,11 +11,11 @@ namespace Bot_Application1
     {
         public static void PostgresSql(EntityRecommendation adressemail)
         {
-            string conn = "Server=localhost;Port=5432;User Id=postgres;Password=1234qwer;Database=SaveEmailBot";
+            string conn = "Server=emailpostgres.postgres.database.azure.com;Port=5432;User Id=Evgen@emailpostgres;Password=1234Qwer;Database=myemaildb";
             NpgsqlConnection connection = new NpgsqlConnection(conn);
             connection.Open();
             string address = adressemail.Entity;
-            NpgsqlCommand command = new NpgsqlCommand("INSERT INTO email (address) VALUES (@email)", connection);
+            NpgsqlCommand command = new NpgsqlCommand("INSERT INTO saveemail (addres) VALUES (@email)", connection);
             command.Parameters.AddWithValue("@email", address);
             try
             {
@@ -31,11 +31,11 @@ namespace Bot_Application1
 
         public static bool SearchEmail(EntityRecommendation adressemail)
         {
-            string conn = "Server=localhost;Port=5432;User Id=postgres;Password=1234qwer;Database=SaveEmailBot";
+            string conn = "Server=emailpostgres.postgres.database.azure.com;Port=5432;User Id=Evgen@emailpostgres;Password=1234Qwer;Database=myemaildb";
             NpgsqlConnection connection = new NpgsqlConnection(conn);
             connection.Open();
             string address = adressemail.Entity;
-            NpgsqlCommand command = new NpgsqlCommand("Select  count(*) from email where address=@email", connection);
+            NpgsqlCommand command = new NpgsqlCommand("Select  count(*) from saveemail where addres=@email", connection);
             command.Parameters.AddWithValue("@email", address);
             try
             {

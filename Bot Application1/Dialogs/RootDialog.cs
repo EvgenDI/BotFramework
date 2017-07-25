@@ -20,6 +20,7 @@ namespace Bot_Application1.Dialogs
     {
 
         private string cod;
+        private int count;
         private EntityRecommendation entityConteiner;
 
         [LuisIntent("")]
@@ -52,6 +53,7 @@ namespace Bot_Application1.Dialogs
         public async Task Processmail(IDialogContext context, LuisResult result)
         {
             var massage = "Введите адрес электронной почты";
+
             await context.PostAsync(massage);
             context.Wait(MessageReceived);
         }
@@ -64,7 +66,7 @@ namespace Bot_Application1.Dialogs
         public async Task ProcessGetEmail(IDialogContext context, LuisResult result)
         {
             var massage = "Введен некорректный адрес электронной почты ";
-            cod = ThreadRandom.getRandom().Result.ToString();
+            
             
 
             if (result.TryFindEntity("builtin.email", out entityConteiner))
@@ -74,17 +76,18 @@ namespace Bot_Application1.Dialogs
                 {
                     if (Postgres.SearchEmail(entityConteiner) == true)
                     {
-
+                        cod = ThreadRandom.getRandom().Result.ToString();
+                        count = 3;
                         await Email.SendEmailAsync(entityConteiner, cod);
-                        await context.PostAsync($"Сообщение с кодом потверждения отправлено,введите код подтверждения" + cod);
+                        await context.PostAsync("Сообщение с кодом потверждения отправлено,введите код подтверждения");
                         context.Wait(Editcod);
-                    }
-                    else
-                    {
-                        await context.PostAsync($"Указанный адрес электронной почты уже используется.Введите другой адрес электронной почты " + cod);
-                        context.Wait(MessageReceived);
-                    }
                 }
+                else
+                {
+                    await context.PostAsync($"Указанный адрес электронной почты уже используется.Введите другой адрес электронной почты " + cod);
+                    context.Wait(MessageReceived);
+                }
+            }
                 else
                 {
                     await context.PostAsync(massage);
@@ -98,20 +101,75 @@ namespace Bot_Application1.Dialogs
 
         private async Task Editcod(IDialogContext context, IAwaitable<IMessageActivity> argument)
         {
+            
 
             var msg = await argument;
-            if (msg.Text == cod)
+
+            if (msg.Text.ToLower() == "отмена")
             {
-                Postgres.PostgresSql(entityConteiner);
-                await context.PostAsync($"Адрес электронной почты успешно сохранен");
-                
+                await context.PostAsync($"Отмена");
+                context.Wait(MessageReceived);
             }
             else
             {
-                await context.PostAsync($"Неправильный код");
-            }
-            context.Wait(MessageReceived);
+                if (msg.Text == cod)
+                {
+                    Postgres.PostgresSql(entityConteiner);
+                    await context.PostAsync($"Адрес электронной почты успешно сохранен");
+                    context.Wait(MessageReceived);
+                }
+                else
+                {
+                    count--;
+                    await context.PostAsync($"Неправильный код, осталось попыток " + count );
+                    if (count == 0)
+                    {
+                        PromptDialog.Confirm(context, ErrorCode, $"Использовать другой адрес электронной почты?");
+                    }
+                    else
+                    {
+                        context.Wait(Editcod);
+                    }
 
+                }
+            }
+            
+
+        }
+
+        private async Task  ErrorCode(IDialogContext context, IAwaitable<bool> result)
+        {
+            var msg = await result;
+            if (msg)
+            {
+
+                var massage = "Введите адрес электронной почты";
+                await context.PostAsync(massage);
+                context.Wait(MessageReceived);
+            }
+            else
+            {
+                PromptDialog.Confirm(context,RepeatCode, $"Выслать код подтверждения повторно?");
+            }
+        }
+
+        private async Task RepeatCode(IDialogContext context, IAwaitable<bool> result)
+        {
+            var msg = await result;
+            if (msg)
+            {
+                count = 3;
+                await Email.SendEmailAsync(entityConteiner, cod);
+                var massage = "Сообщение с кодом потверждения отправлено,введите код подтверждения" + cod;
+                await context.PostAsync(massage);
+                context.Wait(Editcod);
+            }
+            else
+            {
+                var massage = "Пока";
+                await context.PostAsync(massage);
+                context.Wait(MessageReceived);
+            }
         }
 
         private async Task SAY(IDialogContext context, IAwaitable<bool> result)
@@ -119,6 +177,7 @@ namespace Bot_Application1.Dialogs
             var msg = await result;
             if (msg)
             {
+                
                 var massage = "Введите адрес электронной почты";
                 await context.PostAsync(massage);
                 context.Wait(MessageReceived);
