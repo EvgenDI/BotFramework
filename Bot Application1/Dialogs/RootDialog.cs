@@ -76,11 +76,12 @@ namespace Bot_Application1.Dialogs
                 {
                     if (Postgres.SearchEmail(entityConteiner) == true)
                     {
-                        cod = ThreadRandom.getRandom().Result.ToString();
-                        count = 3;
-                        await Email.SendEmailAsync(entityConteiner, cod);
-                        await context.PostAsync("Сообщение с кодом потверждения отправлено,введите код подтверждения");
-                        context.Wait(Editcod);
+                        //cod = ThreadRandom.getRandom().Result.ToString();
+                        //count = 3;
+                        //await Email.SendEmailAsync(entityConteiner, cod);
+                        //await context.PostAsync("Сообщение с кодом потверждения отправлено,введите код подтверждения");
+                        //context.Wait(Editcod);
+                        await rerer(context);
                 }
                 else
                 {
@@ -158,11 +159,12 @@ namespace Bot_Application1.Dialogs
             var msg = await result;
             if (msg)
             {
-                count = 3;
-                await Email.SendEmailAsync(entityConteiner, cod);
-                var massage = "Сообщение с кодом потверждения отправлено,введите код подтверждения" + cod;
-                await context.PostAsync(massage);
-                context.Wait(Editcod);
+                //count = 3;
+                //await Email.SendEmailAsync(entityConteiner, cod);
+                //var massage = "Сообщение с кодом потверждения отправлено,введите код подтверждения";
+                //await context.PostAsync(massage);
+                //context.Wait(Editcod);
+                await rerer(context);
             }
             else
             {
@@ -189,7 +191,17 @@ namespace Bot_Application1.Dialogs
                 context.Wait(MessageReceived);
             }
         }
-       
+
+        private async Task rerer(IDialogContext context)
+        {
+            cod = ThreadRandom.getRandom().Result.ToString();
+            count = 3;
+            await Email.SendEmailAsync(entityConteiner, cod);
+            await context.PostAsync("Сообщение с кодом потверждения отправлено,введите код подтверждения");
+            context.Wait(Editcod);
+        }
+
+
 
     }
     }
