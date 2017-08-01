@@ -292,7 +292,6 @@ namespace Bot_Application1.Dialogs
             sms.Send(number, cod);
             await context.PostAsync("Сообщение с кодом потверждения отправлено,введите код подтверждения");
             context.Wait(EditCod);
-
         }
      }
  }
