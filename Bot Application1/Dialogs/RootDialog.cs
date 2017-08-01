@@ -174,7 +174,7 @@ namespace Bot_Application1.Dialogs
                     { 
                         if (count == 0)
                         {
-                            PromptDialog.Confirm(context, ErrorCode, $"Использовать другой адрес электронной почты?");
+                            PromptDialog.Confirm(context, ErrorCode, "Использовать другой адрес электронной почты?");
                         }
                         else
                         {
@@ -187,7 +187,7 @@ namespace Bot_Application1.Dialogs
                         {
                             if (count == 0)
                             {
-                                PromptDialog.Confirm(context, ErrorCode, $"Использовать другой номер мобильного телефона?");
+                                PromptDialog.Confirm(context, ErrorCode, "Использовать другой номер мобильного телефона?");
                             }
                             else
                             {
@@ -211,7 +211,7 @@ namespace Bot_Application1.Dialogs
             }
             else
             {
-                PromptDialog.Confirm(context,RepeatCode, $"Выслать код подтверждения повторно?");
+                PromptDialog.Confirm(context,RepeatCode, "Выслать код подтверждения повторно?");
             }
         }
 
@@ -227,7 +227,7 @@ namespace Bot_Application1.Dialogs
             }
             else
             {
-                PromptDialog.Confirm(context, RepeatCode, $"Выслать код подтверждения повторно?");
+                PromptDialog.Confirm(context, RepeatCode, "Выслать код подтверждения повторно?");
             }
         }
 

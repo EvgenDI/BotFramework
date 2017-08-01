@@ -49,15 +49,6 @@ namespace Bot_Application1
 
         public async Task SendEmailAsync(EntityRecommendation email, string cod)
         {
-            //MailAddress from = new MailAddress("super.geroi2018@yandex.ru", "BotEvgen");
-            //MailAddress to = new MailAddress(email.Entity);
-            //MailMessage m = new MailMessage(from, to);
-            //m.Subject = "Редактирование электронной почты";
-            //m.Body = cod;
-            //SmtpClient smtp = new SmtpClient("smtp.yandex.ru", 25);
-            //smtp.Credentials = new NetworkCredential("super.geroi2018@yandex.ru", "1234Qwer");
-            //smtp.EnableSsl = true;
-            //await smtp.SendMailAsync(m);
             MailAddress fromMail = new MailAddress(from, "BotEvgen");
             MailAddress toMail = new MailAddress(email.Entity);
             MailMessage m = new MailMessage(fromMail, toMail);
