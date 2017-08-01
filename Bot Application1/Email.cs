@@ -10,11 +10,32 @@ using System.Web;
 
 namespace Bot_Application1
 {
+    [Serializable]
     public class Email
     {
-        public static bool correct(string email)
+        private const string emailRegExPattern = @"^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9})$";
+        private string host;
+        private string user;
+        private string password;
+        private string from;
+        private int port;
+
+
+
+        public Email(string host, int port, string user, string password,string from)
         {
-            if (Regex.IsMatch(email, @"^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9})$"))
+            this.host = host;
+            this.port = port;
+            this.user = user;
+            this.password = password;
+            this.from = from;
+        }
+
+
+
+        public bool Correct(string email)
+        {
+            if (Regex.IsMatch(email,emailRegExPattern))
             {
                 return true;
             }
@@ -24,21 +45,28 @@ namespace Bot_Application1
             }
         }
 
-        public static async Task SendEmailAsync(EntityRecommendation eemail, string cod)
-        {
 
-            MailAddress from = new MailAddress("super.geroi2018@yandex.ru", "BotEvgen");
-            MailAddress to = new MailAddress(eemail.Entity);
-            MailMessage m = new MailMessage(from, to);
+
+        public async Task SendEmailAsync(EntityRecommendation email, string cod)
+        {
+            //MailAddress from = new MailAddress("super.geroi2018@yandex.ru", "BotEvgen");
+            //MailAddress to = new MailAddress(email.Entity);
+            //MailMessage m = new MailMessage(from, to);
+            //m.Subject = "Редактирование электронной почты";
+            //m.Body = cod;
+            //SmtpClient smtp = new SmtpClient("smtp.yandex.ru", 25);
+            //smtp.Credentials = new NetworkCredential("super.geroi2018@yandex.ru", "1234Qwer");
+            //smtp.EnableSsl = true;
+            //await smtp.SendMailAsync(m);
+            MailAddress fromMail = new MailAddress(from, "BotEvgen");
+            MailAddress toMail = new MailAddress(email.Entity);
+            MailMessage m = new MailMessage(fromMail, toMail);
             m.Subject = "Редактирование электронной почты";
             m.Body = cod;
-            SmtpClient smtp = new SmtpClient("smtp.yandex.ru", 25);
-            smtp.Credentials = new NetworkCredential("super.geroi2018@yandex.ru", "1234Qwer");
+            SmtpClient smtp = new SmtpClient(host, port);
+            smtp.Credentials = new NetworkCredential(user, password);
             smtp.EnableSsl = true;
             await smtp.SendMailAsync(m);
         }
-
-
-
     }
 }

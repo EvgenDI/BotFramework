@@ -29,6 +29,8 @@ namespace Bot_Application1
             return response;
         }
 
+
+
         private Activity HandleSystemMessage(Activity message)
         {
             if (message.Type == ActivityTypes.DeleteUserData)
@@ -54,7 +56,6 @@ namespace Bot_Application1
             else if (message.Type == ActivityTypes.Ping)
             {
             }
-
             return null;
         }
     }

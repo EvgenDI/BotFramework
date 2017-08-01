@@ -14,22 +14,34 @@ using System.Collections.Generic;
 namespace Bot_Application1.Dialogs
 {
     [Serializable]
-    [LuisModel("1c503cd1-0f49-4e00-a21b-61e508f8688e", "878007334e2c4ad184de582be1e043f4")]
+    [LuisModel("", "")]
+
+
 
     public class RootDialog : LuisDialog<object>
     {
-
         private string cod;
+        private string newNumberPhone;
         private int count;
+        //getProced=0 - Email , getProced=1 - Phone
+        private int getProced;
         private EntityRecommendation entityConteiner;
+        private string numberPhone;
+        Email clEmail = new Email(host,port,user,password,from);
+        Postgres clPostgres = new Postgres("db connection string");
+        SmsRu sms = new SmsRu("ApiKey");
+        ThreadRandom random = new ThreadRandom();
+
+
 
         [LuisIntent("")]
         public async Task ProcessNone(IDialogContext context, LuisResult result)
         {
-            var massage = "Простите, я вас не понимаю";
-            await context.PostAsync(massage);
+            await context.PostAsync("Простите, я вас не понимаю");
             context.Wait(MessageReceived);
         }
+
+
 
         [LuisIntent("Hello")]
         public async Task ProcessHello(IDialogContext context, LuisResult result)
@@ -43,109 +55,158 @@ namespace Bot_Application1.Dialogs
             };
             var massage = massages[(new Random()).Next(massages.Count() - 1)];
             await context.PostAsync(massage);
-            PromptDialog.Confirm(context, SAY, $"Редактировать электронную почту?");
-            
+            PromptDialog.Confirm(context, Say, $"Редактировать электронную почту?");
         }
 
-      
 
-        [LuisIntent("mail")]
-        public async Task Processmail(IDialogContext context, LuisResult result)
+
+        [LuisIntent("Mail")]
+        public async Task ProcessMail(IDialogContext context, LuisResult result)
         {
-            var massage = "Введите адрес электронной почты";
-
-            await context.PostAsync(massage);
+            await context.PostAsync("Введите адрес электронной почты");
             context.Wait(MessageReceived);
         }
 
 
 
-
-        
         [LuisIntent("GetEmail")]
         public async Task ProcessGetEmail(IDialogContext context, LuisResult result)
         {
-            var massage = "Введен некорректный адрес электронной почты ";
-            
-            
-
             if (result.TryFindEntity("builtin.email", out entityConteiner))
             {
-
-                if (Email.correct(entityConteiner.Entity))
+                if (clEmail.Correct(entityConteiner.Entity))
                 {
-                    if (Postgres.SearchEmail(entityConteiner) == true)
+                    if (clPostgres.SearchEmail(entityConteiner) == true)
                     {
-                        //cod = ThreadRandom.getRandom().Result.ToString();
-                        //count = 3;
-                        //await Email.SendEmailAsync(entityConteiner, cod);
-                        //await context.PostAsync("Сообщение с кодом потверждения отправлено,введите код подтверждения");
-                        //context.Wait(Editcod);
-                        await rerer(context);
+                        await SendCode(context);
+                    }
+                    else
+                    {
+                        await context.PostAsync("Указанный адрес электронной почты уже используется.Введите другой адрес электронной почты ");
+                        context.Wait(MessageReceived);
+                    }
                 }
                 else
                 {
-                    await context.PostAsync($"Указанный адрес электронной почты уже используется.Введите другой адрес электронной почты " + cod);
+                    await context.PostAsync("Введен некорректный адрес электронной почты ");
                     context.Wait(MessageReceived);
                 }
             }
-                else
-                {
-                    await context.PostAsync(massage);
-                    context.Wait(MessageReceived);
-                }
-            }
-
-           
-
         }
 
-        private async Task Editcod(IDialogContext context, IAwaitable<IMessageActivity> argument)
+
+
+        [LuisIntent("Phone")]
+        public async Task ProcessPhone(IDialogContext context, LuisResult result)
         {
+            getProced = 1;
+            await context.PostAsync("Введите номер мобильного телефона.Вида 8 ### ### ## ##");
+            context.Wait(SendPhone);
             
+        }
 
+
+
+        private async Task SendPhone(IDialogContext context, IAwaitable<IMessageActivity> argument)
+        {
             var msg = await argument;
-
+            numberPhone = msg.Text;
             if (msg.Text.ToLower() == "отмена")
             {
-                await context.PostAsync($"Отмена");
+                await context.PostAsync("Отмена");
+                context.Wait(MessageReceived);
+            }
+            else
+            {
+                if (sms.CorrectPhone(numberPhone) == true)
+                {
+                    newNumberPhone = sms.DeleteSymbol(numberPhone);
+                    if (clPostgres.SearchPhone(newNumberPhone) == true)
+                    {
+                        await SendCodePhone(context, numberPhone);
+                    }
+                    else
+                    {
+                        await context.PostAsync("Указанный номер мобильного телефона уже используется. Введите другой номер мобильного телефона");
+                        context.Wait(SendPhone);
+                    }
+                }
+                else
+                {
+                    await context.PostAsync("Введен некорректный номер мобильного телефона.Повторите попытку");
+                    context.Wait(SendPhone);
+                }
+            }
+        }
+
+
+
+        private async Task EditCod(IDialogContext context, IAwaitable<IMessageActivity> argument)
+        {
+            var msg = await argument;
+            if (msg.Text.ToLower() == "отмена")
+            {
+                await context.PostAsync("Отмена");
                 context.Wait(MessageReceived);
             }
             else
             {
                 if (msg.Text == cod)
                 {
-                    Postgres.PostgresSql(entityConteiner);
-                    await context.PostAsync($"Адрес электронной почты успешно сохранен");
-                    context.Wait(MessageReceived);
+                    if (getProced == 0)
+                    {
+                        clPostgres.PostgreSql(entityConteiner);
+                        await context.PostAsync("Адрес электронной почты успешно сохранен");
+                        context.Wait(MessageReceived);
+                    }
+                    else
+                    {
+                        clPostgres.PostgreSql(newNumberPhone);
+                        await context.PostAsync("Номер мобильного телефона успешно сохранен");
+                        context.Wait(MessageReceived);
+                    }
                 }
                 else
                 {
                     count--;
-                    await context.PostAsync($"Неправильный код, осталось попыток " + count );
-                    if (count == 0)
-                    {
-                        PromptDialog.Confirm(context, ErrorCode, $"Использовать другой адрес электронной почты?");
+                    await context.PostAsync($"Неправильный код, осталось попыток " + count);
+                    if (getProced == 0)
+                    { 
+                        if (count == 0)
+                        {
+                            PromptDialog.Confirm(context, ErrorCode, $"Использовать другой адрес электронной почты?");
+                        }
+                        else
+                        {
+                            context.Wait(EditCod);
+                        }
                     }
                     else
                     {
-                        context.Wait(Editcod);
+                        if (getProced == 1)
+                        {
+                            if (count == 0)
+                            {
+                                PromptDialog.Confirm(context, ErrorCode, $"Использовать другой номер мобильного телефона?");
+                            }
+                            else
+                            {
+                                context.Wait(EditCod);
+                            }
+                        }
                     }
-
                 }
-            }
-            
-
+            }           
         }
+
+
 
         private async Task  ErrorCode(IDialogContext context, IAwaitable<bool> result)
         {
             var msg = await result;
             if (msg)
             {
-
-                var massage = "Введите адрес электронной почты";
-                await context.PostAsync(massage);
+                await context.PostAsync("Введите адрес электронной почты");
                 context.Wait(MessageReceived);
             }
             else
@@ -154,54 +215,84 @@ namespace Bot_Application1.Dialogs
             }
         }
 
+
+
+        private async Task ErrorCodePhone(IDialogContext context, IAwaitable<bool> result)
+        {
+            var msg = await result;
+            if (msg)
+            {
+                await context.PostAsync("Введите номер мобильного телеффона");
+                context.Wait(SendPhone);
+            }
+            else
+            {
+                PromptDialog.Confirm(context, RepeatCode, $"Выслать код подтверждения повторно?");
+            }
+        }
+
+
+
         private async Task RepeatCode(IDialogContext context, IAwaitable<bool> result)
         {
             var msg = await result;
             if (msg)
             {
-                //count = 3;
-                //await Email.SendEmailAsync(entityConteiner, cod);
-                //var massage = "Сообщение с кодом потверждения отправлено,введите код подтверждения";
-                //await context.PostAsync(massage);
-                //context.Wait(Editcod);
-                await rerer(context);
+                if (getProced == 0)
+                {
+                    await SendCode(context);
+                }
+                else
+                {
+                    await SendCodePhone(context, numberPhone);
+                }
             }
             else
             {
-                var massage = "Пока";
-                await context.PostAsync(massage);
+                await context.PostAsync("Пока");
                 context.Wait(MessageReceived);
             }
         }
 
-        private async Task SAY(IDialogContext context, IAwaitable<bool> result)
+
+
+        private async Task Say(IDialogContext context, IAwaitable<bool> result)
         {
             var msg = await result;
             if (msg)
-            {
-                
-                var massage = "Введите адрес электронной почты";
-                await context.PostAsync(massage);
+            {                
+                await context.PostAsync("Введите адрес электронной почты");
                 context.Wait(MessageReceived);
             }
             else
             {
-                var massage = "Пока";
-                await context.PostAsync(massage);
+                await context.PostAsync("Пока");
                 context.Wait(MessageReceived);
             }
         }
 
-        private async Task rerer(IDialogContext context)
+
+
+        private async Task SendCode(IDialogContext context)
         {
-            cod = ThreadRandom.getRandom().Result.ToString();
+            cod = random.GetRandom().Result.ToString();
             count = 3;
-            await Email.SendEmailAsync(entityConteiner, cod);
+            getProced = 0;
+            await clEmail.SendEmailAsync(entityConteiner, cod);
             await context.PostAsync("Сообщение с кодом потверждения отправлено,введите код подтверждения");
-            context.Wait(Editcod);
+            context.Wait(EditCod);
         }
 
 
 
-    }
-    }
+        private async Task SendCodePhone(IDialogContext context,string number)
+        {
+            cod = random.GetRandom().Result.ToString();
+            count = 3;
+            sms.Send(number, cod);
+            await context.PostAsync("Сообщение с кодом потверждения отправлено,введите код подтверждения");
+            context.Wait(EditCod);
+
+        }
+     }
+ }
