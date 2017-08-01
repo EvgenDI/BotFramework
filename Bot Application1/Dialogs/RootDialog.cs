@@ -100,7 +100,7 @@ namespace Bot_Application1.Dialogs
         public async Task ProcessPhone(IDialogContext context, LuisResult result)
         {
             getProced = 1;
-            await context.PostAsync("Введите номер мобильного телефона.Вида 8 ### ### ## ##");
+            await context.PostAsync("Введите номер мобильного телефона.Формат 8 ### ### ## ##");
             context.Wait(SendPhone);
             
         }
